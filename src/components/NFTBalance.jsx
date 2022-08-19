@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { useMoralis } from "react-moralis";
+import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
 import { Card, Image, Tooltip, Modal, Input } from "antd";
 import { useNFTBalance } from "hooks/useNFTBalance";
-import { FileSearchOutlined, SendOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { FileSearchOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import { getExplorer } from "helpers/networks";
-import AddressInput from "./AddressInput";
 const { Meta } = Card;
 
 const styles = {
@@ -22,46 +21,43 @@ const styles = {
 
 function NFTBalance() {
   const { NFTBalance } = useNFTBalance();
-  const { chainId } = useMoralisDapp();
-  const { Moralis } = useMoralis();
+  const {Moralis} = useMoralis()
+  const { chainId, contractABI, marketAddress  } = useMoralisDapp();
   const [visible, setVisibility] = useState(false);
-  const [receiverToSend, setReceiver] = useState(null);
-  const [amountToSend, setAmount] = useState(null);
-  const [nftToSend, setNftToSend] = useState(null);
-  const [isPending, setIsPending] = useState(false);
+  const [nftToSell, setNftToSell] = useState(null);
+  const [price, setPrice] = useState();
+  const contractProcessor = useWeb3ExecuteFunction();
+  const contractABIJson = JSON.parse(contractABI);
+  const listItemFunction = 'createdMarketItem'
 
-  async function transfer(nft, amount, receiver) {
-    const options = {
-      type: nft.contract_type,
-      tokenId: nft.token_id,
-      receiver: receiver,
-      contractAddress: nft.token_address,
-    };
-
-    if (options.type === "erc1155") {
-      options.amount = amount;
-    }
-
-    setIsPending(true);
-    await Moralis.transfer(options)
-      .then((tx) => {
-        console.log(tx);
-        setIsPending(false);
-      })
-      .catch((e) => {
-        alert(e.message);
-        setIsPending(false);
-      });
-  }
-
-  const handleTransferClick = (nft) => {
-    setNftToSend(nft);
+  const handleSellClick = (nft) => {
+    setNftToSell(nft);
     setVisibility(true);
   };
 
-  const handleChange = (e) => {
-    setAmount(e.target.value);
-  };
+  async function list(nft, currentPrice){
+    const price = currentPrice * ("1e" + 18);
+    const options = {
+      contractAddress: marketAddress,
+      functionName: listItemFunction,
+      abi: contractABIJson,
+      params: {
+        nftContract: nft.token_address,
+        tokenId: nft.token_id,
+        price: String(price)
+      }
+    }
+    await contractProcessor.fetch({
+      params: options,
+      onSuccess: (result) => {
+        alert("Item Bought", result)
+      },
+      onError: (error) => {
+        alert("Some thing went wrong", error)
+      }
+    });
+    
+  }
 
   console.log(NFTBalance);
   return (
@@ -79,11 +75,9 @@ function NFTBalance() {
                     }
                   />
                 </Tooltip>,
-                <Tooltip title="Transfer NFT">
-                  <SendOutlined onClick={() => handleTransferClick(nft)} />
-                </Tooltip>,
-                <Tooltip title="Sell On OpenSea">
-                  <ShoppingCartOutlined onClick={() => alert("OPENSEA INTEGRATION COMING!")} />
+
+                <Tooltip title="Sell this NFT">
+                  <ShoppingCartOutlined onClick={() => handleSellClick(nft)} />
                 </Tooltip>,
               ]}
               style={{ width: 240, border: "2px solid #e7eaf3" }}
@@ -103,17 +97,22 @@ function NFTBalance() {
           ))}
       </div>
       <Modal
-        title={`Transfer ${nftToSend?.name || "NFT"}`}
+        title={`Buy  ${nftToSell?.name || "NFT"}`}
         visible={visible}
         onCancel={() => setVisibility(false)}
-        onOk={() => transfer(nftToSend, amountToSend, receiverToSend)}
-        confirmLoading={isPending}
-        okText="Send"
+        onOk={() => list(nftToSell, price)}
+        okText="Sell"
       >
-        <AddressInput autoFocus placeholder="Receiver" onChange={setReceiver} />
-        {nftToSend && nftToSend.contract_type === "erc1155" && (
-          <Input placeholder="amount to send" onChange={(e) => handleChange(e)} />
-        )}
+        <img
+            src = {nftToSell?.image}
+            style= {{
+                width: "250px",
+                margin: "auto",
+                borderRadius: "10px",
+                marginBottom: "15px"
+            }}
+            />
+      <Input autoFocus placeholder="Set price on MATIC" onChange={e => setPrice(e.target.value)} />
       </Modal>
     </>
   );
