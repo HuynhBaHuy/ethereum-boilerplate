@@ -1,13 +1,12 @@
 /* eslint-disable jsx-a11y/alt-text */
 
 import React, { useState } from "react";
-import { useMoralis } from "react-moralis";
-import { Card, Image, Tooltip, Modal, Input } from "antd";
+import { useMoralis, useMoralisQuery } from "react-moralis";
+import { Card, Image, Tooltip, Modal, Badge } from "antd";
 import { useNFTTokenIds } from "hooks/useNFTTokenIds";
 import { FileSearchOutlined, ShoppingCartOutlined, RightCircleOutlined } from "@ant-design/icons";
 import { useMoralisDapp } from "providers/MoralisDappProvider/MoralisDappProvider";
 import { getExplorer } from "helpers/networks";
-import AddressInput from "./AddressInput";
 import { getCollectionsByChain } from "helpers/collections";
 const { Meta } = Card;
 
@@ -31,10 +30,37 @@ function NFTTokenIds({inputValue, setInputValue}) {
   const NFTCollections = getCollectionsByChain(chainId);
   const [nftToBuy, setNftToBuy] = useState();
 
+  const queryMarketItems = useMoralisQuery("CreatedMarketItems")
+  const fetchMarketItems = JSON.parse(JSON.stringify(queryMarketItems.data, [
+    "objectId",
+    "createdAt",
+    "price",
+    "nftContract",
+    "itemId",
+    "sold",
+    "tokenId",
+    "seller",
+    "owner",
+    "confirmed",
+  ]))
   const handleBuyClick = (nft) => {
     setNftToBuy(nft);
     setVisibility(true);
   };
+
+  const getMarketItem = (nft) => {
+    console.log("getMarketItem", fetchMarketItems)
+    const result = fetchMarketItems?.find(
+      (e) => 
+        e.nftContract === nft.token_address && 
+        e.tokenId === nft.token_id && 
+        e.sold === false &&
+        e.confirmed === true 
+    );
+    return result;
+  }
+
+
   return (
     <>
       <div style={styles.NFTs}>
@@ -67,7 +93,8 @@ function NFTTokenIds({inputValue, setInputValue}) {
               }
               key={index}
             >
-              <Meta title={nft.name} description={nft.token_address} />
+              { getMarketItem(nft) && <Badge.Ribbon text="Buy Now" color="green" />}
+              <Meta title={nft.name} description={nft.token_id} />
             </Card>
           ))}
 

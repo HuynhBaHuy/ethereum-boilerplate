@@ -8,6 +8,47 @@ function MoralisDappProvider({ children }) {
   const [chainId, setChainId] = useState();
   const [contractABI, setContractABI] = useState(`[
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "nftContract",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			}
+		],
+		"name": "createMarketItem",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "nftContract",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "itemId",
+				"type": "uint256"
+			}
+		],
+		"name": "createMarketSale",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
@@ -81,47 +122,6 @@ function MoralisDappProvider({ children }) {
 		"type": "event"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "nftContract",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "price",
-				"type": "uint256"
-			}
-		],
-		"name": "createMarketItem",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "nftContract",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "itemId",
-				"type": "uint256"
-			}
-		],
-		"name": "createMarketSale",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"name": "fetchMarketItems",
 		"outputs": [
@@ -186,7 +186,7 @@ function MoralisDappProvider({ children }) {
 	}
 ]`);
 
-  const [marketAddress, setMarketAddress] = useState('0xc265390F88E46E148c8eEDf9De356c488853c155');
+  const [marketAddress, setMarketAddress] = useState(`0x63d404B4B8029B70aD80F632d898e68146e6d422`);
 
   useEffect(() => {
     Moralis.onChainChanged(function (chain) {

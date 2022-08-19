@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
+import { useMoralis, useWeb3ExecuteFunction, useMoralisQuery } from "react-moralis";
 import { Card, Image, Tooltip, Modal, Input } from "antd";
 import { useNFTBalance } from "hooks/useNFTBalance";
 import { FileSearchOutlined, ShoppingCartOutlined } from "@ant-design/icons";
@@ -28,8 +28,7 @@ function NFTBalance() {
   const [price, setPrice] = useState();
   const contractProcessor = useWeb3ExecuteFunction();
   const contractABIJson = JSON.parse(contractABI);
-  const listItemFunction = 'createdMarketItem'
-
+  const listItemFunction = 'createMarketItem'
   const handleSellClick = (nft) => {
     setNftToSell(nft);
     setVisibility(true);
@@ -37,6 +36,7 @@ function NFTBalance() {
 
   async function list(nft, currentPrice){
     const price = currentPrice * ("1e" + 18);
+    console.log(price, nft, marketAddress, listItemFunction);
     const options = {
       contractAddress: marketAddress,
       functionName: listItemFunction,
@@ -50,13 +50,15 @@ function NFTBalance() {
     await contractProcessor.fetch({
       params: options,
       onSuccess: (result) => {
-        alert("Item Bought", result)
+        console.log(result)
+        alert("Item listed Success")
       },
       onError: (error) => {
-        alert("Some thing went wrong", error)
+        console.log(error)
+        alert(error)
       }
     });
-    
+    setVisibility(false)
   }
 
   console.log(NFTBalance);
